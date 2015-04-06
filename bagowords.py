@@ -8,47 +8,47 @@ class BagOfWords(object):
     for usage by the Document class, DocumentClass class and the Pool class."""
 
     def __init__(self):
-        self.__number_of_words = 0
-        self.__bag_of_words = {}
+        self._number_of_words = 0
+        self._bag_of_words = {}
 
     def __add__(self,other):
         """ Overloading of the "+" operator to join two BagOfWords """
         erg = BagOfWords()
-        sum = erg.__bag_of_words
-        for key in self.__bag_of_words:
-            sum[key] = self.__bag_of_words[key]
-            if key in other.__bag_of_words:
-                sum[key] += other.__bag_of_words[key]
-        for key in other.__bag_of_words:
+        sum = erg._bag_of_words
+        for key in self._bag_of_words:
+            sum[key] = self._bag_of_words[key]
+            if key in other._bag_of_words:
+                sum[key] += other._bag_of_words[key]
+        for key in other._bag_of_words:
             if key not in sum:
-                sum[key] = other.__bag_of_words[key]
+                sum[key] = other._bag_of_words[key]
         return erg
 
     def add_word(self,word):
         """ A word is added in the dictionary __bag_of_words"""
-        self.__number_of_words += 1
-        if word in self.__bag_of_words:
-            self.__bag_of_words[word] += 1
+        self._number_of_words += 1
+        if word in self._bag_of_words:
+            self._bag_of_words[word] += 1
         else:
-            self.__bag_of_words[word] = 1
+            self._bag_of_words[word] = 1
 
     def len(self):
         """ Returning the number of different words of an object """
-        return len(self.__bag_of_words)
+        return len(self._bag_of_words)
 
     def Words(self):
         """ Returning a list of the words contained in the object """
-        return self.__bag_of_words.keys()
+        return self._bag_of_words.keys()
 
 
     def BagOfWords(self):
         """ Returning the dictionary, containing the words (keys) with their frequency (values)"""
-        return self.__bag_of_words
+        return self._bag_of_words
 
     def WordFreq(self,word):
         """ Returning the frequency of a word """
-        if word in self.__bag_of_words:
-            return self.__bag_of_words[word]
+        if word in self._bag_of_words:
+            return self._bag_of_words[word]
         else:
             return 0
 
@@ -58,8 +58,8 @@ class Document(object):
     _vocabulary = BagOfWords()
 
     def __init__(self, vocabulary):
-        self.__name = ""
-        self.__document_class = None
+        self._name = ""
+        self._document_class = None
         self._words_and_freq = BagOfWords()
         Document._vocabulary = vocabulary
 
@@ -154,38 +154,38 @@ class DocumentClass(Document):
 
 class Pool(object):
     def __init__(self):
-        self.__document_classes = {}
-        self.__vocabulary = BagOfWords()
+        self._document_classes = {}
+        self._vocabulary = BagOfWords()
 
     def sum_words_in_class(self, dclass):
         """ The number of times all different words of a dclass appear in a class """
         sum = 0
-        for word in self.__vocabulary.Words():
-            WaF = self.__document_classes[dclass].WordsAndFreq()
+        for word in self._vocabulary.Words():
+            WaF = self._document_classes[dclass].WordsAndFreq()
             if word in WaF:
                 sum +=  WaF[word]
         return sum
 
     def learn(self, documents, dclass_name):
-        x = DocumentClass(self.__vocabulary)
+        x = DocumentClass(self._vocabulary)
         for document in documents:
-            d = Document(self.__vocabulary)
+            d = Document(self._vocabulary)
             d.read_document(document, learn=True)
             x = x + d
-        self.__document_classes[dclass_name] = x
+        self._document_classes[dclass_name] = x
         x.SetNumberOfDocs(len(documents))
 
 
     def open_and_learn(self, directory, dclass_name):
         """ directory is a path, where the files of the class with the name dclass_name can be found """
-        x = DocumentClass(self.__vocabulary)
+        x = DocumentClass(self._vocabulary)
         dir = os.listdir(directory)
         for file in dir:
-            d = Document(self.__vocabulary)
+            d = Document(self._vocabulary)
             print(directory + "/" + file)
             d.open_document(directory + "/" + file, learn = True)
             x = x + d
-        self.__document_classes[dclass_name] = x
+        self._document_classes[dclass_name] = x
         x.SetNumberOfDocs(len(dir))
 
 
@@ -195,26 +195,26 @@ class Pool(object):
             sum_dclass = self.sum_words_in_class(dclass)
             prob = 0
 
-            d = Document(self.__vocabulary)
+            d = Document(self._vocabulary)
 
             d.read_document(doc)
 
-            for j in self.__document_classes:
+            for j in self._document_classes:
                 sum_j = self.sum_words_in_class(j)
                 prod = 1
                 for i in d.Words():
-                    wf_dclass = 1 + self.__document_classes[dclass].WordFreq(i)
-                    wf = 1 + self.__document_classes[j].WordFreq(i)
+                    wf_dclass = 1 + self._document_classes[dclass].WordFreq(i)
+                    wf = 1 + self._document_classes[j].WordFreq(i)
                     r = wf * sum_dclass / (wf_dclass * sum_j)
                     prod *= r
-                prob += prod * self.__document_classes[j].NumberOfDocuments() / self.__document_classes[dclass].NumberOfDocuments()
+                prob += prod * self._document_classes[j].NumberOfDocuments() / self._document_classes[dclass].NumberOfDocuments()
             if prob != 0:
                 return 1 / prob
             else:
                 return -1
         else:
             prob_list = []
-            for dclass in self.__document_classes:
+            for dclass in self._document_classes:
                 prob = self.Probability(doc, dclass)
                 prob_list.append([dclass,prob])
             prob_list.sort(key = lambda x: x[1], reverse = True)
@@ -222,10 +222,10 @@ class Pool(object):
 
     def DocumentIntersectionWithClasses(self, doc_name):
         res = [doc_name]
-        for dc in self.__document_classes:
-            d = Document(self.__vocabulary)
+        for dc in self._document_classes:
+            d = Document(self._vocabulary)
             d.read_document(doc_name, learn=False)
-            o = self.__document_classes[dc] &  d
+            o = self._document_classes[dc] &  d
             intersection_ratio = len(o) / len(d.Words())
             res += (dc, intersection_ratio)
         return res
